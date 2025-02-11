@@ -17,7 +17,18 @@ const app = express();
 const PORT = 8009;
 
 app.use(bodyParser.json());
-app.use(cors());
+// Cors Policy
+// For production
+app.use(
+  cors({
+    origin: "*",
+    methods: "GET,POST,PUT,DELETE",
+    allowedHeaders: "Content-Type,Authorization",
+  })
+);
+app.options("*", cors());
+//for development
+// app.use(cors());
 
 /**
  * Admin Login (Firebase Auth)
