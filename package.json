@@ -1,0 +1,27 @@
+{
+  "name": "dj_seo_server",
+  "version": "1.0.0",
+  "description": "Digtial Jugglers SEO Server",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": " nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "author": "Zishan",
+  "license": "ISC",
+  "dependencies": {
+    "@netlify/functions": "^3.0.0",
+    "@types/express": "^5.0.0",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "firebase": "^11.2.0",
+    "firebase-admin": "^13.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql": "^2.18.1",
+    "puppeteer": "^24.2.0",
+    "serverless-http": "^3.2.0"
+  }
+}
