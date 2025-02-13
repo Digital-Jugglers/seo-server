@@ -117,6 +117,41 @@ app.post("/create-user", async (req, res) => {
   }
 });
 
+/** Get All Clients */
+app.get("/users", async (req, res) => {
+  try {
+    const usersSnapshot = await db
+      .collection("users")
+      .where("role", "==", "client")
+      .get();
+
+    if (usersSnapshot.empty)
+      return res.status(404).json({ message: "No clients found" });
+
+    const users = await Promise.all(
+      usersSnapshot.docs.map(async (doc) => {
+        const userData = doc.data();
+
+        // Fetch projects for the client (reducing Firestore reads)
+        const projectsSnapshot = await doc.ref.collection("projects").get();
+        const projects = projectsSnapshot.docs.map((proj) => ({
+          id: proj.id,
+          ...proj.data(),
+        }));
+
+        return { id: doc.id, ...userData, projects }; // Ensure a uniform response structure
+      })
+    );
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching clients:", error);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+});
+
 /** Get a Single User (Client) */
 app.get("/users/:id", async (req, res) => {
   try {
@@ -134,24 +169,34 @@ app.get("/users/:id", async (req, res) => {
 /** Update Project Details (Client) */
 app.put("/users/:id", async (req, res) => {
   const { id } = req.params;
-  const { projectName, projectDetail, projectStatus } = req.body;
+  let { projectName, projectDetail, projectStatus, siteUrl, keywords } =
+    req.body;
 
   try {
+    // Ensure values are not undefined
+    const updateData = {};
+    if (projectName !== undefined) updateData.projectName = projectName;
+    if (projectDetail !== undefined) updateData.projectDetail = projectDetail;
+    if (projectStatus !== undefined) updateData.projectStatus = projectStatus;
+    if (siteUrl !== undefined) updateData.siteUrl = siteUrl;
+    if (keywords !== undefined)
+      updateData.keywords = keywords.split(",").map((kw) => kw.trim());
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
+    // Reference to 'default' project under user's 'projects' subcollection
     const projectRef = db
       .collection("users")
       .doc(id)
       .collection("projects")
       .doc("default");
-    await projectRef.set(
-      {
-        projectName,
-        projectDetail: projectDetail || "",
-        projectStatus,
-      },
-      { merge: true }
-    );
+    await projectRef.set(updateData, { merge: true });
+
     res.json({ message: "Project updated successfully" });
   } catch (error) {
+    console.error("Error updating project:", error);
     res
       .status(500)
       .json({ message: "Error updating project", error: error.message });
