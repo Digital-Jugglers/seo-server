@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const admin = require("firebase-admin");
 const puppeteer = require("puppeteer");
+const axios = require("axios");
 require("dotenv").config();
 
 // Initialize Firebase Admin SDK
@@ -210,41 +211,32 @@ app.put("/users/:id", async (req, res) => {
   }
 });
 
-/** Get Rankings for a Client Project */
-app.get("/rankings/:id", async (req, res) => {
-  try {
-    const projectRef = db
-      .collection("users")
-      .doc(req.params.id)
-      .collection("projects")
-      .doc("default");
-    const projectDoc = await projectRef.get();
-
-    if (!projectDoc.exists)
-      return res.status(404).json({ message: "Project not found" });
-    res.json({ rankings: projectDoc.data().rankings || [] });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching rankings", error: error.message });
-  }
-});
-
-/** Fetch and Scrape Google Rankings */
+// Function to get Google ranking using Custom Search API
 const getRanking = async (keyword, siteUrl) => {
-  const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.goto(
-    `https://www.google.com/search?q=${encodeURIComponent(keyword)}`
-  );
-  const results = await page.evaluate(() =>
-    [...document.querySelectorAll("div.tF2Cxc a")].map((a) => a.href)
-  );
-  await browser.close();
-  return results.findIndex((url) => url.includes(siteUrl)) + 1 || "Not found";
+  await delay(1500);
+  try {
+    const response = await axios.get(
+      "https://www.googleapis.com/customsearch/v1",
+      {
+        params: {
+          q: keyword,
+          key: process.env.GOOGLE_API_KEY,
+          cx: process.env.GOOGLE_CSE_ID,
+        },
+      }
+    );
+
+    const results = response.data.items || [];
+    const position =
+      results.findIndex((item) => item.link.includes(siteUrl)) + 1;
+    return position > 0 ? position : "Not found";
+  } catch (error) {
+    console.error("Error fetching ranking:", error.message);
+    return "Error";
+  }
 };
 
-/** Scrape and Store Rankings */
+// Scrape and store rankings
 app.get("/scrape-rankings/:id", async (req, res) => {
   try {
     const projectRef = db
