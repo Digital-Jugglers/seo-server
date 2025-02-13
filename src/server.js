@@ -22,9 +22,11 @@ app.use(bodyParser.json());
 // For production
 app.use(
   cors({
-    origin: "*",
-    methods: "GET,POST,PUT,DELETE",
-    allowedHeaders: "Content-Type,Authorization",
+    origin: [
+      "https://seo-dashboard-client.digitalmarketinglucknow.com",
+      "https://seo-dashboard-admin.digitalmarketinglucknow.com",
+      "http://localhost:3000",
+    ],
   })
 );
 app.options("*", cors());
