@@ -147,7 +147,7 @@ app.get("/users", async (req, res) => {
           ...proj.data(),
         }));
 
-        return { id: doc.id, ...userData, projects }; // Ensure a uniform response structure
+        return { id: doc.id, ...userData, projects };
       })
     );
 
@@ -211,6 +211,8 @@ app.put("/users/:id", async (req, res) => {
   }
 });
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Function to get Google ranking using Custom Search API
 const getRanking = async (keyword, siteUrl) => {
   await delay(1500);
@@ -256,6 +258,7 @@ app.get("/scrape-rankings/:id", async (req, res) => {
       keywords.map(async (keyword) => ({
         keyword,
         position: await getRanking(keyword, siteUrl),
+        date: new Date().toISOString(),
       }))
     );
     await projectRef.update({ rankings });
