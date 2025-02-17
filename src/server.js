@@ -92,8 +92,16 @@ app.post("/register-admin", async (req, res) => {
 
 /** Admin: Create New Client User */
 app.post("/create-user", async (req, res) => {
-  const { name, email, password, projectName, projectStatus } = req.body;
-  if (!name || !email || !password || !projectName || !projectStatus)
+  const { name, email, password, phoneNumber, projectName, projectStatus } =
+    req.body;
+  if (
+    !name ||
+    !email ||
+    !password ||
+    !phoneNumber ||
+    !projectName ||
+    !projectStatus
+  )
     return res.status(400).json({ message: "All fields are required." });
 
   try {
@@ -104,6 +112,7 @@ app.post("/create-user", async (req, res) => {
     await userRef.set({
       name,
       email,
+      phoneNumber,
       role: "client",
       createdAt: new Date().toISOString(),
     });
