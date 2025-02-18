@@ -259,19 +259,23 @@ app.get("/scrape-rankings/:id", async (req, res) => {
     if (!projectDoc.exists)
       return res.status(404).json({ message: "Project not found" });
 
-    const { siteUrl, keywords = [] } = projectDoc.data();
+    const { siteUrl, keywords = [], rankings = [] } = projectDoc.data();
     if (!siteUrl || keywords.length === 0)
       return res.status(400).json({ message: "Missing site URL or keywords" });
 
-    const rankings = await Promise.all(
+    const newRankings = await Promise.all(
       keywords.map(async (keyword) => ({
         keyword,
         position: await getRanking(keyword, siteUrl),
         date: new Date().toISOString(),
       }))
     );
-    await projectRef.update({ rankings });
-    res.json({ message: "Rankings updated", rankings });
+
+    // Store historical rankings
+    await projectRef.update({
+      rankings: [...rankings, ...newRankings],
+    });
+    res.json({ message: "Rankings updated", rankings: newRankings });
   } catch (error) {
     res
       .status(500)
