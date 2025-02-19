@@ -24,6 +24,7 @@ app.use(bodyParser.json());
 app.use(
   cors({
     origin: [
+      "*",
       "https://seo-dashboard-client.digitalmarketinglucknow.com",
       "https://seo-dashboard-admin.digitalmarketinglucknow.com",
       "https://seo-server-7icx.onrender.com",
